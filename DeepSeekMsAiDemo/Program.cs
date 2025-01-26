@@ -80,7 +80,7 @@ public static  class ResponseManager
                 ]
             }
             """;
-        var chatCompletion = await chatClient.CompleteAsync<OrganizationResponse>(prompt, chatOptions);
+        var chatCompletion = await chatClient.CompleteAsync(prompt, chatOptions);
         var parsedJson = JsonSerializer.Deserialize<OrganizationResponse>(chatCompletion.Message.Text, 
             JsonSerializationOptions.LlmSerializerOptions);
         Console.WriteLine(JsonSerializer.Serialize(parsedJson, JsonSerializationOptions.LlmSerializerOptions));
