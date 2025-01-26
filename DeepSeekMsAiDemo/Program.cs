@@ -4,13 +4,8 @@ using System.Text.Json;
 using DeepSeekMsAiDemo;
 using Microsoft.Extensions.AI;
 
-// 💡 try deepseek or llama 3.2
-var chatClient = new OllamaChatClient(new Uri("http://localhost:11434"), 
-    "deepseek-r1"
-    // "llama3.2"
-);
-
-var chatOptions = new ChatOptions
+var deepseekChatClient = new OllamaChatClient(new Uri("http://localhost:11434"), "deepseek-r1");
+var deepseekChatOptions = new ChatOptions
 {
     ResponseFormat = ChatResponseFormat.Json,
     // response_format neded for deepseek json setup (doesn;t affect 3.2) -- https://api-docs.deepseek.com/guides/json_mode
@@ -23,11 +18,19 @@ var chatOptions = new ChatOptions
     },
 };
 
-Console.WriteLine("Processing LLM call...");
+var threeTwoChatClient = new OllamaChatClient(new Uri("http://localhost:11434"), "llama3.2");
 
-// 💡 try both prompts -- 3.2 works on both, deepseek only works on the first
-// await ResponseManager.WorksAllTheTime(chatClient, chatOptions);
-await ResponseManager.WorksThreeTwoNotDeepseek(chatClient, chatOptions);
+var threeTwoChatOptions = new ChatOptions
+{
+    ResponseFormat = ChatResponseFormat.Json,
+};
+
+Console.WriteLine($"Processing LLM call...{Environment.NewLine}{Environment.NewLine}");
+
+await ResponseManager.WorksAllTheTime(threeTwoChatClient, threeTwoChatOptions);
+await ResponseManager.WorksThreeTwoNotDeepseek(threeTwoChatClient, threeTwoChatOptions);
+await ResponseManager.WorksAllTheTime(deepseekChatClient, deepseekChatOptions);
+await ResponseManager.WorksThreeTwoNotDeepseek(deepseekChatClient, deepseekChatOptions);
 
 
 public static  class ResponseManager
@@ -54,7 +57,8 @@ public static  class ResponseManager
         var chatCompletion = await chatClient.CompleteAsync(prompt, chatOptions);
         var parsedJson = JsonSerializer.Deserialize<CategoriesResponse>(chatCompletion.Message.Text, JsonSerializationOptions.LlmSerializerOptions);
 
-        Console.WriteLine(JsonSerializer.Serialize(parsedJson, JsonSerializationOptions.LlmSerializerOptions));
+        // Console.WriteLine(JsonSerializer.Serialize(parsedJson, JsonSerializationOptions.LlmSerializerOptions));
+        Console.WriteLine($"{chatClient.Metadata.ModelId} for categories has {parsedJson?.Categories?.Count ?? 0} items");
     }
     
     public static async Task WorksThreeTwoNotDeepseek(IChatClient chatClient, ChatOptions chatOptions)
@@ -81,8 +85,13 @@ public static  class ResponseManager
             }
             """;
         var chatCompletion = await chatClient.CompleteAsync(prompt, chatOptions);
-        var parsedJson = JsonSerializer.Deserialize<OrganizationResponse>(chatCompletion.Message.Text, 
-            JsonSerializationOptions.LlmSerializerOptions);
-        Console.WriteLine(JsonSerializer.Serialize(parsedJson, JsonSerializationOptions.LlmSerializerOptions));
+        var parsedJson = JsonSerializer.Deserialize<OrganizationResponse>(chatCompletion.Message.Text, JsonSerializationOptions.LlmSerializerOptions);
+        
+        // Console.WriteLine(JsonSerializer.Serialize(parsedJson, JsonSerializationOptions.LlmSerializerOptions));
+        Console.WriteLine($"{chatClient.Metadata.ModelId} for organizations has {parsedJson?.Organizations?.Count ?? 0} items");
+        if (parsedJson?.Organizations?.Count == 0)
+        {
+            Console.WriteLine($"There should be 5 organizations in the response");
+        }
     }
 }
