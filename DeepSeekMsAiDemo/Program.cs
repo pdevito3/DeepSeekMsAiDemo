@@ -80,7 +80,7 @@ public static  class ResponseManager
 
             {
                 "organizations": [
-                    { "name": "Redwood Genomics", "domain": "redgene" }
+                    { "name": "Redwood Genomics", "domain": "redgene.com" }
                 ]
             }
             """;
